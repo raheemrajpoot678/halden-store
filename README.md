@@ -154,8 +154,8 @@ Catalogue pages are prerendered and refreshed in the background (ISR). Any edit 
 - A [Stripe](https://stripe.com) account in test mode, plus the [Stripe CLI](https://docs.stripe.com/stripe-cli)
 
 ```bash
-git clone https://github.com/raheemrajpoot678/atelier-store.git
-cd atelier-store
+git clone https://github.com/raheemrajpoot678/halden-store.git
+cd halden-store
 npm install
 
 cp .env.example .env.local     # fill in the values below
