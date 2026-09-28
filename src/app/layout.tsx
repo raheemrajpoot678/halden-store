@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { CartProvider } from "@/components/cart/cart-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -11,19 +10,18 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   title: {
-    default: "Atelier",
-    template: "%s | Atelier",
+    default: "Halden",
+    template: "%s | Halden",
   },
-  description: "Atelier store",
+  description: "Halden: bags, shoes, jewellery and ready-to-wear, made slowly by hand.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} h-full`}>
       <body className="flex min-h-full flex-col">
-        <SiteHeader />
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
+        {/* Storefront chrome lives in (store)/layout.tsx; admin has its own. */}
+        <CartProvider>{children}</CartProvider>
       </body>
     </html>
   );

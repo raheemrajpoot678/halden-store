@@ -1,9 +1,26 @@
-// Loads the storefront catalogue into the database. Safe to re-run: rows are
-// upserted by slug. Run with: npm run db:seed
+// Loads the storefront catalogue, the demo accounts and a few sample orders
+// into the database. Safe to re-run: catalogue rows are upserted by slug, users
+// by email, and sample orders (fixed ids) are only inserted once.
+// Run with: npm run db:seed
 import "./load-env";
+import { createHash } from "node:crypto";
+import { hashPassword } from "better-auth/crypto";
 import { sql } from "drizzle-orm";
+import { demoAccounts } from "../lib/demo-accounts";
 import { db } from "./index";
-import { categories, products, type Photo } from "./schema";
+import {
+  account,
+  categories,
+  notifications,
+  orders,
+  products,
+  refunds,
+  user,
+  type FulfilmentStatus,
+  type OrderItem,
+  type OrderStatus,
+  type Photo,
+} from "./schema";
 
 function unsplash(id: string, alt: string): Photo {
   return {
@@ -494,9 +511,191 @@ async function main() {
       },
     });
 
+  // Demo accounts: re-running also resets their passwords, role and ban state.
+  for (const demo of demoAccounts) {
+    const [row] = await db
+      .insert(user)
+      .values({
+        id: crypto.randomUUID(),
+        name: demo.name,
+        email: demo.email,
+        emailVerified: true,
+        role: demo.role,
+      })
+      .onConflictDoUpdate({
+        target: user.email,
+        set: {
+          name: demo.name,
+          emailVerified: true,
+          role: demo.role,
+          banned: false,
+          banReason: null,
+          banExpires: null,
+          updatedAt: new Date(),
+        },
+      })
+      .returning({ id: user.id });
+
+    // Better Auth keys credential accounts by providerId + accountId (= user id).
+    await db
+      .insert(account)
+      .values({
+        id: crypto.randomUUID(),
+        userId: row.id,
+        accountId: row.id,
+        providerId: "credential",
+        password: await hashPassword(demo.password),
+      })
+      .onConflictDoUpdate({
+        target: [account.providerId, account.accountId],
+        set: { password: sql.raw("excluded.password"), updatedAt: new Date() },
+      });
+  }
+
+  const sampleOrders = await seedSampleOrders();
+
   console.log(
-    `Seeded ${categorySeeds.length} categories and ${productSeeds.length} products.`,
+    `Seeded ${categorySeeds.length} categories, ${productSeeds.length} products, ${demoAccounts.length} demo accounts and ${sampleOrders} new sample orders.`,
   );
+}
+
+type SampleOrder = {
+  daysAgo: number;
+  lines: [slug: string, quantity: number][];
+  customer: "demo" | { name: string; email: string };
+  fulfilment: FulfilmentStatus;
+  refundCents?: number | "all";
+};
+
+// Historical orders for the admin dashboard. They have no Stripe ids, so they
+// can't be refunded from admin, and they don't touch stock.
+const sampleOrderSeeds: SampleOrder[] = [
+  { daysAgo: 58, lines: [["lune-top-handle-bag", 1]], customer: "demo", fulfilment: "delivered" },
+  { daysAgo: 51, lines: [[productSeeds[1].slug, 1], [productSeeds[2].slug, 1]], customer: { name: "Ines Moreau", email: "ines@example.com" }, fulfilment: "delivered" },
+  { daysAgo: 44, lines: [[productSeeds[3].slug, 2]], customer: { name: "Sam Okafor", email: "sam@example.com" }, fulfilment: "delivered", refundCents: "all" },
+  { daysAgo: 37, lines: [[productSeeds[4].slug, 1]], customer: "demo", fulfilment: "delivered" },
+  { daysAgo: 29, lines: [[productSeeds[5].slug, 1], [productSeeds[0].slug, 1]], customer: { name: "Mei Tanaka", email: "mei@example.com" }, fulfilment: "delivered" },
+  { daysAgo: 23, lines: [[productSeeds[6].slug, 1]], customer: { name: "Leo Brandt", email: "leo@example.com" }, fulfilment: "delivered", refundCents: 5000 },
+  { daysAgo: 18, lines: [[productSeeds[7].slug, 1]], customer: { name: "Ava Clarke", email: "ava@example.com" }, fulfilment: "delivered" },
+  { daysAgo: 12, lines: [[productSeeds[8].slug, 3]], customer: "demo", fulfilment: "delivered" },
+  { daysAgo: 8, lines: [[productSeeds[9].slug, 1]], customer: { name: "Noah Fischer", email: "noah@example.com" }, fulfilment: "shipped" },
+  { daysAgo: 5, lines: [[productSeeds[10].slug, 1], [productSeeds[11].slug, 1]], customer: { name: "Zara Ali", email: "zara@example.com" }, fulfilment: "shipped" },
+  { daysAgo: 3, lines: [[productSeeds[12].slug, 1]], customer: "demo", fulfilment: "unfulfilled" },
+  { daysAgo: 1, lines: [[productSeeds[13].slug, 1]], customer: { name: "Omar Haddad", email: "omar@example.com" }, fulfilment: "unfulfilled" },
+  { daysAgo: 0, lines: [[productSeeds[0].slug, 1], [productSeeds[14].slug, 1]], customer: { name: "Clara Rossi", email: "clara@example.com" }, fulfilment: "unfulfilled" },
+];
+
+// Stable, distinct-looking ids so re-seeding finds the same rows.
+function sampleOrderId(index: number) {
+  const hex = createHash("sha256").update(`atelier-sample-order-${index}`).digest("hex");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-8${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
+
+async function seedSampleOrders() {
+  const productRows = await db
+    .select({
+      id: products.id,
+      slug: products.slug,
+      name: products.name,
+      colour: products.colour,
+      images: products.images,
+      priceCents: products.priceCents,
+    })
+    .from(products);
+  const bySlug = new Map(productRows.map((row) => [row.slug, row]));
+  const [demoUser] = await db
+    .select({ id: user.id, name: user.name, email: user.email })
+    .from(user)
+    .where(sql`${user.email} = ${demoAccounts[0].email}`);
+
+  let inserted = 0;
+  for (const [index, seed] of sampleOrderSeeds.entries()) {
+    const items: OrderItem[] = seed.lines.flatMap(([slug, quantity]) => {
+      const product = bySlug.get(slug);
+      if (!product) return [];
+      return [{
+        productId: product.id,
+        slug: product.slug,
+        name: product.name,
+        colour: product.colour,
+        image: product.images[0],
+        unitPriceCents: product.priceCents,
+        quantity,
+      }];
+    });
+    if (items.length === 0) continue;
+
+    const totalCents = items.reduce((sum, item) => sum + item.unitPriceCents * item.quantity, 0);
+    const refundedCents =
+      seed.refundCents === "all" ? totalCents : Math.min(seed.refundCents ?? 0, totalCents);
+    const status: OrderStatus =
+      refundedCents === 0 ? "paid" : refundedCents >= totalCents ? "refunded" : "partially_refunded";
+    const day = 24 * 60 * 60 * 1000;
+    const paidAt = new Date(Date.now() - seed.daysAgo * day - (index % 5) * 60 * 60 * 1000);
+    const customer = seed.customer === "demo" ? demoUser : seed.customer;
+    const id = sampleOrderId(index);
+
+    const rows = await db
+      .insert(orders)
+      .values({
+        id,
+        userId: seed.customer === "demo" ? (demoUser?.id ?? null) : null,
+        status,
+        items,
+        subtotalCents: totalCents,
+        shippingCents: 0,
+        totalCents,
+        email: customer?.email ?? null,
+        shippingDetails: {
+          name: customer?.name ?? null,
+          address: {
+            line1: `${120 + index} Mercer Street`,
+            line2: null,
+            city: "New York",
+            state: "NY",
+            postal_code: "10012",
+            country: "US",
+          },
+        },
+        paidAt,
+        // Stripe's standard US card pricing: 2.9% + 30¢.
+        stripeFeeCents: Math.round(totalCents * 0.029) + 30,
+        refundedCents,
+        fulfilmentStatus: seed.fulfilment,
+        carrier: seed.fulfilment === "unfulfilled" ? null : "UPS",
+        trackingNumber:
+          seed.fulfilment === "unfulfilled" ? null : `1Z999AA1${String(index).padStart(8, "0")}`,
+        shippedAt: seed.fulfilment === "unfulfilled" ? null : new Date(paidAt.getTime() + day),
+        deliveredAt: seed.fulfilment === "delivered" ? new Date(paidAt.getTime() + 3 * day) : null,
+        createdAt: paidAt,
+        updatedAt: paidAt,
+      })
+      .onConflictDoNothing()
+      .returning({ id: orders.id });
+    if (rows.length === 0) continue;
+    inserted++;
+
+    if (refundedCents > 0) {
+      await db.insert(refunds).values({
+        orderId: id,
+        stripeRefundId: `demo_re_${index + 1}`,
+        amountCents: refundedCents,
+        status: "succeeded",
+        reason: "requested_by_customer",
+        createdAt: new Date(paidAt.getTime() + 5 * day),
+      });
+    }
+    if (seed.daysAgo <= 3) {
+      await db.insert(notifications).values({
+        type: "order_paid",
+        orderId: id,
+        title: `New order · ${id.slice(0, 8).toUpperCase()}`,
+        body: `$${(totalCents / 100).toLocaleString("en-US")} · ${customer?.email ?? "guest"}`,
+        createdAt: paidAt,
+      });
+    }
+  }
+  return inserted;
 }
 
 main().catch((error) => {

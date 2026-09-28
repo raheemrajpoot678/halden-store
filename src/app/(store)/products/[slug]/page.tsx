@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getAllProductSlugs, getProduct, getRelatedProducts } from "@/lib/products";
 import { formatPrice } from "@/lib/format";
 import { getStockStatus } from "@/lib/stock";
+import { AddToBagButton } from "@/components/cart/add-to-bag-button";
 import { ProductCard } from "@/components/product-card";
 import { ProductAccordion } from "@/components/product/product-accordion";
 import { ProductGallery } from "@/components/product/product-gallery";
@@ -105,9 +106,17 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
                 </button>
               </>
             ) : (
-              <button type="button" className="btn btn-primary w-full">
-                Add to bag
-              </button>
+              <AddToBagButton
+                product={{
+                  slug: product.slug,
+                  name: product.name,
+                  colour: product.colour,
+                  category: product.category,
+                  image: product.images[0],
+                  unitPriceCents: product.priceCents,
+                  stock: product.stock,
+                }}
+              />
             )}
           </div>
 

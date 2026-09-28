@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Atelier design system
+ * Halden design system
  *
  * Principles: a monochrome canvas that lets product imagery lead, one deep
  * accent used sparingly, small tracked uppercase UI labels against large
@@ -99,6 +99,23 @@
   --duration-fast: 150ms;
   --duration-base: 250ms;
   --duration-slow: 500ms;
+
+  /* Entrance motion for campaign imagery; use behind motion-safe: only. */
+  --animate-settle: settle 2400ms var(--ease-standard) both;
+  --animate-rise: rise 900ms var(--ease-standard) both;
+
+  @keyframes settle {
+    from {
+      transform: scale(1.06);
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -417,6 +434,59 @@
   &:hover {
     opacity: 0.6;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Forms — square 48px fields on hairlines, ink border on focus         */
+/* ------------------------------------------------------------------ */
+
+@utility field {
+  display: block;
+  width: 100%;
+  min-height: var(--spacing-control);
+  padding-inline: 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-size: 1rem; /* 16px keeps iOS from zooming on focus */
+  line-height: 1.5;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+
+  &::placeholder {
+    color: var(--color-ink-subtle);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-ink-subtle);
+  }
+
+  &:focus,
+  &:focus-visible {
+    border-color: var(--color-ink);
+    outline: none;
+  }
+
+  &[aria-invalid="true"] {
+    border-color: var(--color-sale);
+  }
+
+  &:disabled {
+    background-color: var(--color-surface);
+    color: var(--color-ink-subtle);
+    cursor: not-allowed;
+  }
+}
+
+@utility field-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  letter-spacing: var(--text-label--letter-spacing);
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
 }
 
 /* ------------------------------------------------------------------ */

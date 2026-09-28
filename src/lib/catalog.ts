@@ -40,7 +40,7 @@ export const hero = {
   description:
     "Soft structure, honest materials and a palette drawn from the season’s turning light.",
   primaryCta: { label: "Discover the collection", href: "/collections/new-in" },
-  secondaryCta: { label: "Shop outerwear", href: "/collections/outerwear" },
+  secondaryCta: { label: "Shop ready-to-wear", href: "/collections/ready-to-wear" },
   images: [
     unsplash(
       "1539533018447-63fcce2678e3",
@@ -84,13 +84,13 @@ export const homeCategorySlugs = [
 ];
 
 export const editorial = {
-  eyebrow: "The Atelier",
+  eyebrow: "The Workshop",
   title: "Made slowly, by hand",
   body: [
     "Every piece begins at a workbench. Leather is cut by eye, edges are painted in layers and stitching is finished by the same hands that started it.",
     "It takes longer. That is the point.",
   ],
-  cta: { label: "Inside the workshop", href: "/stories/atelier" },
+  cta: { label: "Inside the workshop", href: "/stories/workshop" },
   image: unsplash(
     "1581044777550-4cfa60707c03",
     "Woman in a pink ruffled blouse holding sunglasses in a wheat field",
@@ -118,6 +118,70 @@ export const giftEditSlugs = [
   "technical-bomber",
   "cotton-crewneck-sweatshirt",
 ];
+
+// Curated listings served at /collections/[slug] alongside the database
+// categories, until collections are modelled. Rows render in slug order.
+export type CuratedCollection = {
+  slug: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  productSlugs: string[];
+};
+
+export const curatedCollections: CuratedCollection[] = [
+  {
+    slug: "women",
+    eyebrow: "Collection",
+    title: "Women",
+    description: "Bags, shoes and jewellery with a quiet, considered line.",
+    productSlugs: [
+      "lune-top-handle-bag",
+      "embossed-mini-bag",
+      "riviera-woven-leather-bag",
+      "petrol-satchel",
+      "pointed-leather-pump",
+      "pearl-strand-necklace",
+      "chain-link-bracelet",
+      "round-metal-sunglasses",
+    ],
+  },
+  {
+    slug: "men",
+    eyebrow: "Collection",
+    title: "Men",
+    description: "Tailored leather, hard-wearing shoes and everyday layers.",
+    productSlugs: [
+      "technical-bomber",
+      "cotton-crewneck-sweatshirt",
+      "monk-strap-shoe",
+      "brogue-derby",
+      "archive-leather-backpack",
+      "bifold-wallet",
+      "bridle-leather-belt",
+      "minimal-leather-watch",
+    ],
+  },
+  {
+    slug: "gifts",
+    eyebrow: "Considered gifts",
+    title: "The Gift Edit",
+    description: "Pieces chosen to be given, and kept for years.",
+    productSlugs: giftEditSlugs,
+  },
+];
+
+export function getCuratedCollection(slug: string) {
+  return curatedCollections.find((collection) => collection.slug === slug);
+}
+
+// Shown on /help/contact and the help pages. Replace with the real inbox
+// and phone line before launch.
+export const clientServices = {
+  email: "clientservices@halden.example",
+  phone: "+1 (212) 555-0142",
+  hours: "Monday to Friday, 9am–6pm ET",
+};
 
 export const services = [
   {
@@ -151,8 +215,8 @@ export const footerNav: { title: string; links: NavItem[] }[] = [
   {
     title: "The company",
     links: [
-      { label: "About Atelier", href: "/about" },
-      { label: "Craftsmanship", href: "/stories/atelier" },
+      { label: "About Halden", href: "/about" },
+      { label: "Craftsmanship", href: "/stories/workshop" },
       { label: "Sustainability", href: "/sustainability" },
       { label: "Careers", href: "/careers" },
     ],
