@@ -1,26 +1,486 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Atelier design system
+ *
+ * Principles: a monochrome canvas that lets product imagery lead, one deep
+ * accent used sparingly, small tracked uppercase UI labels against large
+ * light-weight headlines, square corners, 1px hairlines, generous vertical
+ * rhythm, and full-bleed layouts with fluid side gutters.
+ */
 
+/* ------------------------------------------------------------------ */
+/* Tokens                                                              */
+/* ------------------------------------------------------------------ */
+
+/* Fonts come from next/font (see layout.tsx), so they must stay inline. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  /* Colors — the default Tailwind palette is removed so only these exist. */
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-canvas: #ffffff; /* page background */
+  --color-surface: #f5f4f2; /* product image wells, panels */
+  --color-surface-strong: #ebe9e6; /* hover / pressed surfaces, disabled fills */
+  --color-ink: #111111; /* primary text, primary buttons, strong rules */
+  --color-ink-muted: #595959; /* secondary text (7:1 on canvas) */
+  --color-ink-subtle: #767676; /* meta text, placeholders (4.5:1 on canvas) */
+  --color-line: #e2e0dc; /* hairline borders and dividers */
+  --color-accent: #4a1520; /* oxblood — badges, small highlights only */
+  --color-sale: #a61b1b;
+  --color-success: #2e6b3a;
+
+  /* Typography — small tracked UI text, large quiet headlines. */
+  --text-caption: 0.6875rem; /* 11px: eyebrows, badges, legal */
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: 0.1em;
+  --text-caption--font-weight: 500;
+
+  --text-label: 0.75rem; /* 12px: buttons, nav, filters */
+  --text-label--line-height: 1.33;
+  --text-label--letter-spacing: 0.08em;
+  --text-label--font-weight: 500;
+
+  --text-body-sm: 0.8125rem; /* 13px: product meta, prices */
+  --text-body-sm--line-height: 1.5;
+  --text-body-sm--letter-spacing: 0.01em;
+
+  --text-body: 0.9375rem; /* 15px: default copy */
+  --text-body--line-height: 1.6;
+
+  --text-lead: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --text-lead--line-height: 1.55;
+
+  --text-title: clamp(1.125rem, 1rem + 0.5vw, 1.375rem); /* product names on PDP */
+  --text-title--line-height: 1.3;
+  --text-title--letter-spacing: -0.005em;
+
+  --text-heading: clamp(1.5rem, 1.15rem + 1.5vw, 2.5rem);
+  --text-heading--line-height: 1.15;
+  --text-heading--letter-spacing: -0.015em;
+
+  --text-display: clamp(2.25rem, 1.4rem + 4.25vw, 5.5rem); /* campaign heroes */
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.025em;
+
+  --tracking-label: 0.08em;
+  --tracking-wide: 0.12em;
+  --tracking-wordmark: 0.32em;
+
+  /* Spacing — Tailwind's 4px scale plus fluid semantic steps. */
+  --spacing-gutter: clamp(1rem, 0.6rem + 2vw, 2.5rem); /* page side padding */
+  --spacing-section: clamp(3rem, 2rem + 5vw, 7.5rem); /* between page sections */
+  --spacing-block: clamp(1.5rem, 1.1rem + 2vw, 3rem); /* inside a section */
+  --spacing-header: 3.5rem; /* header bar height (mobile) */
+  --spacing-header-lg: 4.5rem; /* header bar height (lg+) */
+  --spacing-control: 3rem; /* 48px button / input height */
+  --spacing-control-sm: 2.25rem;
+
+  /* Containers */
+  --container-page: 100rem; /* 1600px: widest content, grids */
+  --container-content: 75rem; /* 1200px: editorial blocks */
+  --container-prose: 40rem; /* 640px: text, forms, checkout steps */
+
+  /* Imagery */
+  --aspect-product: 4 / 5;
+  --aspect-portrait: 3 / 4;
+  --aspect-landscape: 3 / 2;
+  --aspect-hero: 16 / 9;
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 500ms;
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+
+@layer base {
+  html {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  /* Headlines read quiet: regular weight, tight leading, balanced wrap. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 400;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Hairlines everywhere by default instead of currentColor. */
+  *,
+  ::before,
+  ::after,
+  ::backdrop {
+    border-color: var(--color-line);
+  }
+
+  ::selection {
+    background-color: var(--color-ink);
+    color: var(--color-canvas);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--color-ink);
+    outline-offset: 3px;
+  }
+
+  /* Lock page scroll while a modal (menu drawer, etc.) is open. */
+  :root:has(dialog[open]:modal) {
+    overflow: hidden;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ------------------------------------------------------------------ */
+/* Layout primitives                                                   */
+/* ------------------------------------------------------------------ */
+
+/* Full-width shell with fluid gutters, capped for very wide screens. */
+@utility container-page {
+  width: 100%;
+  max-width: var(--container-page);
+  margin-inline: auto;
+  padding-inline: var(--spacing-gutter);
+}
+
+@utility container-content {
+  width: 100%;
+  max-width: calc(var(--container-content) + 2 * var(--spacing-gutter));
+  margin-inline: auto;
+  padding-inline: var(--spacing-gutter);
+}
+
+@utility container-prose {
+  width: 100%;
+  max-width: calc(var(--container-prose) + 2 * var(--spacing-gutter));
+  margin-inline: auto;
+  padding-inline: var(--spacing-gutter);
+}
+
+/* Break a child out of any container to the viewport edges (imagery). */
+@utility full-bleed {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
+@utility section {
+  padding-block: var(--spacing-section);
+}
+
+/* Product listing grid: 2 → 3 → 4 columns, tight columns, airy rows. */
+@utility grid-products {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 0.25rem;
+  row-gap: 2.5rem;
+
+  @media (width >= 48rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.5rem;
+    row-gap: 3.5rem;
+  }
+
+  @media (width >= 80rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Editorial split: stacked on mobile, two equal halves from lg. */
+@utility grid-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--spacing-block);
+
+  @media (width >= 64rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+  }
+}
+
+/* Horizontal scroll-snap row for product rails / category chips. */
+@utility rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 70%;
+  gap: 0.25rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  & > * {
+    scroll-snap-align: start;
+  }
+
+  @media (width >= 48rem) {
+    grid-auto-columns: calc((100% - 2 * 0.5rem) / 3);
+    gap: 0.5rem;
+  }
+
+  @media (width >= 80rem) {
+    grid-auto-columns: calc((100% - 3 * 0.5rem) / 4);
+  }
+}
+
+/* Image well: neutral surface behind product shots, fixed ratio, cover fit. */
+@utility media-frame {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  aspect-ratio: var(--aspect-product);
+
+  & > img,
+  & > video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+/* Dark band for campaign / footer sections: flips the tokens in scope. */
+@utility theme-inverse {
+  --color-canvas: #111111;
+  --color-surface: #1c1c1c;
+  --color-surface-strong: #2a2a2a;
+  --color-ink: #ffffff;
+  --color-ink-muted: #bdbdbd;
+  --color-ink-subtle: #9a9a9a;
+  --color-line: #333333;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+/* ------------------------------------------------------------------ */
+/* Type primitives                                                     */
+/* ------------------------------------------------------------------ */
+
+@utility eyebrow {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption--line-height);
+  letter-spacing: var(--text-caption--letter-spacing);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+@utility ui-label {
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  letter-spacing: var(--text-label--letter-spacing);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------ */
+/* Buttons — square, uppercase, 48px tall, full-width on small screens */
+/* ------------------------------------------------------------------ */
+
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: var(--spacing-control);
+  padding-inline: 2rem;
+  border: 1px solid transparent;
+  border-radius: 0;
+  font-size: var(--text-label);
+  line-height: 1;
+  letter-spacing: var(--text-label--letter-spacing);
+  font-weight: 500;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+  transition-property: color, background-color, border-color, opacity;
+  transition-duration: var(--duration-base);
+  transition-timing-function: var(--ease-standard);
+
+  &:disabled,
+  &[aria-disabled="true"] {
+    cursor: not-allowed;
+    background-color: var(--color-surface-strong);
+    border-color: var(--color-surface-strong);
+    color: var(--color-ink-subtle);
+  }
+}
+
+@utility btn-primary {
+  background-color: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-canvas);
+
+  &:hover:not(:disabled, [aria-disabled="true"]) {
+    opacity: 0.82;
+  }
+}
+
+@utility btn-secondary {
+  background-color: transparent;
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+
+  &:hover:not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-ink);
+    color: var(--color-canvas);
+  }
+}
+
+/* Sits on imagery: white fill, inverts on hover. */
+@utility btn-light {
+  background-color: var(--color-white);
+  border-color: var(--color-white);
+  color: var(--color-black);
+
+  &:hover:not(:disabled, [aria-disabled="true"]) {
+    background-color: transparent;
+    color: var(--color-white);
+  }
+}
+
+@utility btn-sm {
+  min-height: var(--spacing-control-sm);
+  padding-inline: 1.25rem;
+  font-size: var(--text-caption);
+}
+
+/* Full width below md, intrinsic above — the default for CTAs. */
+@utility btn-block {
+  width: 100%;
+
+  @media (width >= 48rem) {
+    width: auto;
+    min-width: 15rem;
+  }
+}
+
+/* Square 44px hit target for header / toolbar icons. */
+@utility icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--color-ink);
+  transition: opacity var(--duration-fast) var(--ease-standard);
+
+  &:hover {
+    opacity: 0.6;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Links                                                               */
+/* ------------------------------------------------------------------ */
+
+/* Inline text link: thin underline that fades on hover. */
+@utility link {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+  text-decoration-color: currentColor;
+  transition: text-decoration-color var(--duration-base) var(--ease-standard);
+
+  &:hover {
+    text-decoration-color: transparent;
+  }
+}
+
+/* Nav / footer link: no underline until hover. */
+@utility link-quiet {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+  text-decoration-color: transparent;
+  transition: text-decoration-color var(--duration-base) var(--ease-standard);
+
+  &:hover,
+  &[aria-current="page"] {
+    text-decoration-color: currentColor;
+  }
+}
+
+/* Standalone uppercase CTA link ("Shop the collection" style). */
+@utility link-cta {
+  display: inline-block;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid currentColor;
+  font-size: var(--text-label);
+  line-height: 1;
+  letter-spacing: var(--text-label--letter-spacing);
+  font-weight: 500;
+  text-transform: uppercase;
+  transition: opacity var(--duration-base) var(--ease-standard);
+
+  &:hover {
+    opacity: 0.6;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Borders                                                             */
+/* ------------------------------------------------------------------ */
+
+@utility hairline {
+  border-width: 0;
+  border-top-width: 1px;
+  border-color: var(--color-line);
+}
+
+@utility hairline-strong {
+  border-width: 0;
+  border-top-width: 1px;
+  border-color: var(--color-ink);
 }
