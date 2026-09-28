@@ -8,6 +8,34 @@
       "when": 1790625241761,
       "tag": "0000_true_sleepwalker",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790631641902,
+      "tag": "0001_known_echo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790632351851,
+      "tag": "0002_milky_electro",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790633272750,
+      "tag": "0003_smart_mephistopheles",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790635627005,
+      "tag": "0004_loose_gressill",
+      "breakpoints": true
     }
   ]
 }

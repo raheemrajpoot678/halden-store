@@ -6,7 +6,7 @@ export function SiteFooter() {
     <footer className="theme-inverse">
       <div className="container-page section grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-[2fr_repeat(3,1fr)]">
         <div className="col-span-2 flex flex-col gap-4 lg:col-span-1">
-          <p className="text-title uppercase tracking-wordmark">Atelier</p>
+          <p className="text-title uppercase tracking-wordmark">Halden</p>
           <p className="max-w-xs text-body-sm text-ink-muted">
             Leather goods, shoes and ready-to-wear, made in small runs by
             people who sign their work.
@@ -30,7 +30,7 @@ export function SiteFooter() {
       </div>
 
       <div className="container-page flex flex-col gap-2 border-t py-6 text-caption text-ink-subtle sm:flex-row sm:justify-between">
-        <p>© {new Date().getFullYear()} Atelier. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} Halden. All rights reserved.</p>
         <p>United States · English · USD</p>
       </div>
     </footer>

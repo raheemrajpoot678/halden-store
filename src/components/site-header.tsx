@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { primaryNav } from "@/lib/catalog";
-import { BagIcon, SearchIcon, UserIcon } from "@/components/icons";
+import { SearchIcon, UserIcon } from "@/components/icons";
+import { BagButton } from "@/components/cart/bag-button";
 import { MobileMenu } from "@/components/mobile-menu";
 
 export function SiteHeader() {
@@ -22,18 +23,16 @@ export function SiteHeader() {
           <Link
             href="/"
             className="text-title uppercase tracking-wordmark"
-            aria-label="Atelier home"
+            aria-label="Halden home"
           >
-            Atelier
+            Halden
           </Link>
 
           <div className="-mr-3 flex items-center justify-end">
             <Link href="/account" className="icon-btn" aria-label="Account">
               <UserIcon />
             </Link>
-            <Link href="/bag" className="icon-btn" aria-label="Shopping bag">
-              <BagIcon />
-            </Link>
+            <BagButton />
           </div>
         </div>
 
